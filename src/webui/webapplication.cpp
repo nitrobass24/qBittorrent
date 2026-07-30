@@ -63,6 +63,7 @@
 #include "api/authcontroller.h"
 #include "api/clientdatacontroller.h"
 #include "api/logcontroller.h"
+#include "api/maindatastore.h"
 #include "api/rsscontroller.h"
 #include "api/searchcontroller.h"
 #include "api/synccontroller.h"
@@ -927,12 +928,16 @@ void WebApplication::sessionStartImpl(const QString &sessionId, const WebSession
         return new TorrentCreatorController(torrentCreationManager, app, parent);
     });
     m_currentSession->registerAPIController(u"sync"_s
-            , [app = app(), parent = m_currentSession, btSession = BitTorrent::Session::instance()]
+            , [this, app = app(), parent = m_currentSession]
     {
-        auto *syncController = new SyncController(app, parent);
-        syncController->updateFreeDiskSpace(btSession->freeDiskSpace());
-        connect(btSession, &BitTorrent::Session::freeDiskSpaceChecked, syncController, &SyncController::updateFreeDiskSpace);
-        return syncController;
+        if (!m_maindataStore)
+        {
+            const auto *btSession = BitTorrent::Session::instance();
+            m_maindataStore = new MaindataStore(this);
+            m_maindataStore->updateFreeDiskSpace(btSession->freeDiskSpace());
+            connect(btSession, &BitTorrent::Session::freeDiskSpaceChecked, m_maindataStore, &MaindataStore::updateFreeDiskSpace);
+        }
+        return new SyncController(m_maindataStore, app, parent);
     });
 }
 

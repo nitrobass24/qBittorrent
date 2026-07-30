@@ -65,6 +65,7 @@ class QNetworkCookie;
 class APIController;
 class AuthController;
 class ClientDataStorage;
+class MaindataStore;
 class WebSession;
 
 enum class WebSessionType : qint8;
@@ -275,6 +276,7 @@ private:
 
     BitTorrent::TorrentCreationManager *m_torrentCreationManager = nullptr;
     ClientDataStorage *m_clientDataStorage = nullptr;
+    MaindataStore *m_maindataStore = nullptr;
 
     struct FailedLogin
     {
