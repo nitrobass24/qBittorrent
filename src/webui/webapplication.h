@@ -62,6 +62,7 @@ inline const Utils::Version<3, 2> API_VERSION {2, 15, 1};
 class APIController;
 class AuthController;
 class ClientDataStorage;
+class MaindataStore;
 class SerializedTorrentsCache;
 class WebApplication;
 
@@ -285,6 +286,7 @@ private:
     BitTorrent::TorrentCreationManager *m_torrentCreationManager = nullptr;
     ClientDataStorage *m_clientDataStorage = nullptr;
     SerializedTorrentsCache *m_serializedTorrentsCache = nullptr;
+    MaindataStore *m_maindataStore = nullptr;
 
     struct FailedLogin
     {

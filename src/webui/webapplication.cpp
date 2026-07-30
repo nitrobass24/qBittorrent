@@ -63,6 +63,8 @@
 #include "api/authcontroller.h"
 #include "api/clientdatacontroller.h"
 #include "api/logcontroller.h"
+#include "api/maindatastore.h"
+#include "api/maindatastore.h"
 #include "api/rsscontroller.h"
 #include "api/searchcontroller.h"
 #include "api/serializedtorrentscache.h"
@@ -847,11 +849,14 @@ void WebApplication::sessionStartImpl(const QString &sessionId, const bool useCo
     m_currentSession->registerAPIController(u"torrents"_s, new TorrentsController(m_serializedTorrentsCache, app(), m_currentSession));
     m_currentSession->registerAPIController(u"transfer"_s, new TransferController(app(), m_currentSession));
 
-    const auto *btSession = BitTorrent::Session::instance();
-    auto *syncController = new SyncController(app(), m_currentSession);
-    syncController->updateFreeDiskSpace(btSession->freeDiskSpace());
-    connect(btSession, &BitTorrent::Session::freeDiskSpaceChecked, syncController, &SyncController::updateFreeDiskSpace);
-    m_currentSession->registerAPIController(u"sync"_s, syncController);
+    if (!m_maindataStore)
+    {
+        const auto *btSession = BitTorrent::Session::instance();
+        m_maindataStore = new MaindataStore(this);
+        m_maindataStore->updateFreeDiskSpace(btSession->freeDiskSpace());
+        connect(btSession, &BitTorrent::Session::freeDiskSpaceChecked, m_maindataStore, &MaindataStore::updateFreeDiskSpace);
+    }
+    m_currentSession->registerAPIController(u"sync"_s, new SyncController(m_maindataStore, app(), m_currentSession));
 
     if (useCookie)
         setSessionCookie();

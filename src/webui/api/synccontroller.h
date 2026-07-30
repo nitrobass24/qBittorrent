@@ -28,94 +28,36 @@
 
 #pragma once
 
-#include <QSet>
 #include <QVariantMap>
 
-#include "base/bittorrent/infohash.h"
-#include "base/tag.h"
 #include "apicontroller.h"
-
-namespace BitTorrent
-{
-    class Torrent;
-    struct TrackerEntryStatus;
-}
+#include "maindatastore.h"
 
 class SyncController : public APIController
 {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(SyncController)
 
-    using APIController::APIController;
-
-public slots:
-    void updateFreeDiskSpace(qint64 freeDiskSpace);
+public:
+    SyncController(MaindataStore *maindataStore, IApplication *app, QObject *parent = nullptr);
 
 private slots:
     void maindataAction();
     void torrentPeersAction();
 
 private:
-    void makeMaindataSnapshot();
+    void onMaindataDeltaProduced(const MaindataStore::Data &delta);
     QJsonObject generateMaindataSyncData(int id, bool fullUpdate);
 
-    void onCategoryAdded(const QString &categoryName);
-    void onCategoryRemoved(const QString &categoryName);
-    void onCategoryOptionsChanged(const QString &categoryName);
-    void onSubcategoriesSupportChanged();
-    void onTagAdded(const Tag &tag);
-    void onTagRemoved(const Tag &tag);
-    void onTorrentAdded(BitTorrent::Torrent *torrent);
-    void onTorrentAboutToBeRemoved(BitTorrent::Torrent *torrent);
-    void onTorrentCategoryChanged(BitTorrent::Torrent *torrent, const QString &oldCategory);
-    void onTorrentMetadataReceived(BitTorrent::Torrent *torrent);
-    void onTorrentStopped(BitTorrent::Torrent *torrent);
-    void onTorrentStarted(BitTorrent::Torrent *torrent);
-    void onTorrentSavePathChanged(BitTorrent::Torrent *torrent);
-    void onTorrentSavingModeChanged(BitTorrent::Torrent *torrent);
-    void onTorrentTagAdded(BitTorrent::Torrent *torrent, const Tag &tag);
-    void onTorrentTagRemoved(BitTorrent::Torrent *torrent, const Tag &tag);
-    void onTorrentsUpdated(const QList<BitTorrent::Torrent *> &torrents);
-    void onTorrentTrackersChanged(BitTorrent::Torrent *torrent);
-    void onTorrentTrackerEntryStatusesUpdated(const BitTorrent::Torrent *torrent
-            , const QHash<QString, BitTorrent::TrackerEntryStatus> &updatedTrackers);
-
-    qint64 m_freeDiskSpace = 0;
+    MaindataStore *m_maindataStore = nullptr;
 
     QVariantMap m_lastPeersResponse;
     QVariantMap m_lastAcceptedPeersResponse;
 
-    QHash<QString, QSet<BitTorrent::TorrentID>> m_knownTrackers;
-
-    QSet<QString> m_updatedCategories;
-    QSet<QString> m_removedCategories;
-    QSet<QString> m_addedTags;
-    QSet<QString> m_removedTags;
-    QSet<QString> m_updatedTrackers;
-    QSet<QString> m_removedTrackers;
-    QSet<BitTorrent::TorrentID> m_updatedTorrents;
-    QSet<BitTorrent::TorrentID> m_announcedTorrents;
-    QSet<BitTorrent::TorrentID> m_removedTorrents;
-
-    struct MaindataSyncBuf
-    {
-        QHash<QString, QVariantMap> categories;
-        QStringList removedCategories;
-
-        QVariantList tags;
-        QStringList removedTags;
-
-        QHash<QString, QVariantMap> torrents;
-        QStringList removedTorrents;
-
-        QHash<QString, QStringList> trackers;
-        QStringList removedTrackers;
-
-        QVariantMap serverState;
-    };
-
-    MaindataSyncBuf m_maindataSnapshot;
-    MaindataSyncBuf m_maindataSyncBuf;
+    // changes sent in the last response, kept until the client acknowledges them
+    MaindataStore::Data m_maindataUnackedBuf;
+    // changes received from the store since the last response was built
+    MaindataStore::Data m_maindataUnsentBuf;
     int m_maindataLastSentID = 0;
     int m_maindataAcceptedID = -1;
 };
