@@ -11,10 +11,10 @@ add_library(qbt_webui STATIC
     api/maindatastore.h
     api/rsscontroller.h
     api/searchcontroller.h
-    api/serializedtorrentscache.h
     api/synccontroller.h
     api/torrentcreatorcontroller.h
     api/torrentscontroller.h
+    api/torrentserializer.h
     api/transfercontroller.h
     api/serialize/serialize_torrent.h
     api/serialize/serialize_trackerentry.h
@@ -32,10 +32,10 @@ add_library(qbt_webui STATIC
     api/maindatastore.cpp
     api/rsscontroller.cpp
     api/searchcontroller.cpp
-    api/serializedtorrentscache.cpp
     api/synccontroller.cpp
     api/torrentcreatorcontroller.cpp
     api/torrentscontroller.cpp
+    api/torrentserializer.cpp
     api/transfercontroller.cpp
     api/serialize/serialize_torrent.cpp
     api/serialize/serialize_trackerentry.cpp

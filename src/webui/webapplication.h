@@ -63,7 +63,7 @@ class APIController;
 class AuthController;
 class ClientDataStorage;
 class MaindataStore;
-class SerializedTorrentsCache;
+class TorrentSerializer;
 class WebApplication;
 
 namespace BitTorrent
@@ -285,7 +285,7 @@ private:
 
     BitTorrent::TorrentCreationManager *m_torrentCreationManager = nullptr;
     ClientDataStorage *m_clientDataStorage = nullptr;
-    SerializedTorrentsCache *m_serializedTorrentsCache = nullptr;
+    TorrentSerializer *m_torrentSerializer = nullptr;
     MaindataStore *m_maindataStore = nullptr;
 
     struct FailedLogin

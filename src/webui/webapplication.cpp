@@ -67,10 +67,10 @@
 #include "api/maindatastore.h"
 #include "api/rsscontroller.h"
 #include "api/searchcontroller.h"
-#include "api/serializedtorrentscache.h"
 #include "api/synccontroller.h"
 #include "api/torrentcreatorcontroller.h"
 #include "api/torrentscontroller.h"
+#include "api/torrentserializer.h"
 #include "api/transfercontroller.h"
 #include "clientdatastorage.h"
 
@@ -168,7 +168,7 @@ WebApplication::WebApplication(IApplication *app, QObject *parent)
     , m_authController {new AuthController(this, app, this)}
     , m_torrentCreationManager {new BitTorrent::TorrentCreationManager(app, this)}
     , m_clientDataStorage {new ClientDataStorage(this)}
-    , m_serializedTorrentsCache {new SerializedTorrentsCache(this)}
+    , m_torrentSerializer {new TorrentSerializer(this)}
 {
     declarePublicAPI(u"auth/login"_s);
 
@@ -846,7 +846,7 @@ void WebApplication::sessionStartImpl(const QString &sessionId, const bool useCo
     m_currentSession->registerAPIController(u"torrentcreator"_s, new TorrentCreatorController(m_torrentCreationManager, app(), m_currentSession));
     m_currentSession->registerAPIController(u"rss"_s, new RSSController(app(), m_currentSession));
     m_currentSession->registerAPIController(u"search"_s, new SearchController(app(), m_currentSession));
-    m_currentSession->registerAPIController(u"torrents"_s, new TorrentsController(m_serializedTorrentsCache, app(), m_currentSession));
+    m_currentSession->registerAPIController(u"torrents"_s, new TorrentsController(m_torrentSerializer, app(), m_currentSession));
     m_currentSession->registerAPIController(u"transfer"_s, new TransferController(app(), m_currentSession));
 
     if (!m_maindataStore)

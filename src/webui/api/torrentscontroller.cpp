@@ -70,7 +70,7 @@
 #include "apistatus.h"
 #include "serialize/serialize_torrent.h"
 #include "serialize/serialize_trackerentry.h"
-#include "serializedtorrentscache.h"
+#include "torrentserializer.h"
 
 // Web seed keys
 const QString KEY_WEBSEED_URL = u"url"_s;
@@ -119,7 +119,6 @@ const QString KEY_PROP_SSL_DHPARAMS = u"ssl_dh_params"_s;
 const QString KEY_PROP_HAS_METADATA = u"has_metadata"_s;
 const QString KEY_PROP_PROGRESS = u"progress"_s;
 const QString KEY_PROP_FILES = u"files"_s;
-const QString KEY_PROP_TRACKERS = u"trackers"_s;
 
 
 // File keys
@@ -483,9 +482,9 @@ namespace
     }
 }
 
-TorrentsController::TorrentsController(SerializedTorrentsCache *serializationCache, IApplication *app, QObject *parent)
+TorrentsController::TorrentsController(TorrentSerializer *torrentSerializer, IApplication *app, QObject *parent)
     : APIController(app, parent)
-    , m_serializationCache {serializationCache}
+    , m_torrentSerializer {torrentSerializer}
 {
     connect(BitTorrent::Session::instance(), &BitTorrent::Session::metadataDownloaded, this, &TorrentsController::onMetadataDownloaded);
 }
@@ -557,12 +556,10 @@ void TorrentsController::infoAction()
         if (!torrentFilter.match(torrent))
             continue;
 
-        QJsonObject serializedTorrent = m_serializationCache->value(*torrent);
+        QJsonObject serializedTorrent = m_torrentSerializer->serializeTorrent(*torrent, includeTrackers);
 
         if (includeFiles && torrent->hasMetadata())
             serializedTorrent.insert(KEY_PROP_FILES, getFiles(torrent));
-        if (includeTrackers)
-            serializedTorrent.insert(KEY_PROP_TRACKERS, m_serializationCache->trackers(*torrent));
 
         torrentList.append(serializedTorrent);
     }
@@ -753,7 +750,7 @@ void TorrentsController::trackersAction()
     QJsonArray trackersList = getStickyTrackers(torrent);
 
     // merge QJsonArray
-    for (const auto &tracker : asConst(m_serializationCache->trackers(*torrent)))
+    for (const auto &tracker : asConst(m_torrentSerializer->serializeTrackers(*torrent)))
         trackersList.append(tracker);
 
     setResult(trackersList);
